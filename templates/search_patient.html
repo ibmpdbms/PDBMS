@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Search Patient
+{% endblock %}
+
+{% block main %}
+    <h1 class="mb-4">🔍 Search Patient</h1>
+    
+    <form action="/search_patient" method="get" class="w-75 mx-auto mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Enter patient name or room number" required>
+            <button class="btn btn-success" type="submit">Search</button>
+        </div>
+    </form>
+
+    {% if patients %}
+        <div class="list-group w-75 mx-auto">
+            {% for patient in patients %}
+                <div class="list-group-item">
+                    <h5>{{ patient.patient_name }}</h5>
+                    <p><strong>Room:</strong> {{ patient.room_number }}</p>
+                    <p><strong>Doctor:</strong> {{ patient.doctor_name }}</p>
+                        <a href="/patient_detail/{{ patient.patient_code }}" class="btn btn-sm btn-primary">View Full Record</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% elif request.args.get("q") %}
+        <p class="text-muted">No results found.</p>
+    {% endif %}
+{% endblock %}

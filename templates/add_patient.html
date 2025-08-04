@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Add Patient Record
+{% endblock %}
+
+{% block main %}
+    <h1 class="mb-4">➕ Add Patient Record</h1>
+
+    <form action="/add_patient" method="post" class="w-75 mx-auto text-start">
+
+        <div class="mb-3">
+            <label for="patient_name" class="form-label">Patient Name</label>
+            <input class="form-control" name="patient_name" type="text" required>
+            <small class="form-text text-muted">
+                The system will generate a unique Patient Code automatically.
+            </small>
+        </div>
+
+        <div class="mb-3">
+            <label for="blood_group" class="form-label">Blood Group</label>
+            <select class="form-control" name="blood_group" required>
+                <option value="" disabled selected>Select blood group</option>
+                <option>A+</option>
+                <option>A-</option>
+                <option>B+</option>
+                <option>B-</option>
+                <option>AB+</option>
+                <option>AB-</option>
+                <option>O+</option>
+                <option>O-</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="weight" class="form-label">Weight (kg)</label>
+                <input class="form-control" name="weight" type="number">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="height" class="form-label">Height (cm)</label>
+                <input class="form-control" name="height" type="number">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Allergies</label>
+            <textarea class="form-control auto-expand" name="allergies" rows="2" style="resize: none;"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Past Treatments</label>
+            <textarea class="form-control auto-expand" name="past_treatments" rows="2" style="resize: none;"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Past Diseases</label>
+            <textarea class="form-control auto-expand" name="past_diseases" rows="2" style="resize: none;"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Doctor Name</label>
+            <input class="form-control" name="doctor_name" type="text">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Room Number</label>
+            <input class="form-control" name="room_number" type="text">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Past Doctor Name</label>
+            <input class="form-control" name="past_doctor_name" type="text">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Insurance Company</label>
+            <input class="form-control" name="insurance_company" type="text">
+        </div>
+
+        <button class="btn btn-primary" type="submit">Save Record</button>
+    </form>
+{% endblock %}

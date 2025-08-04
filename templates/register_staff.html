@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register Staff
+{% endblock %}
+
+{% block main %}
+<h2 class="mb-4">Create Staff Account</h2>
+
+<form action="/register_staff" method="post" class="mx-auto" style="max-width: 400px;">
+    <div class="mb-3">
+        <input class="form-control" name="username" placeholder="Username" type="text" required>
+    </div>
+    <div class="mb-3 input-group">
+        <input class="form-control" id="staff_password" name="password" placeholder="Password" type="password" required>
+        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('staff_password', this)">👁️</button>
+    </div>
+    <div class="mb-3 input-group">
+        <input class="form-control" id="staff_confirmation" name="confirmation" placeholder="Confirm Password" type="password" required>
+        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('staff_confirmation', this)">👁️</button>
+    </div>
+    <button class="btn btn-primary w-100" type="submit">Register Staff</button>
+</form>
+
+<script>
+function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+        btn.textContent = "🙈";
+    } else {
+        field.type = "password";
+        btn.textContent = "👁️";
+    }
+}
+</script>
+{% endblock %}

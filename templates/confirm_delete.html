@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Confirm Delete
+{% endblock %}
+
+{% block main %}
+    <h1 class="mb-4 text-danger">⚠️ Confirm Patient Deletion</h1>
+
+    <div class="card w-75 mx-auto shadow-sm border-danger">
+        <div class="card-body text-start">
+            <h5 class="card-title text-danger">{{ patient.patient_name }}</h5>
+            <p><strong>Patient Code:</strong> <span class="text-danger">{{ patient.patient_code }}</span></p>
+            <p><strong>Room:</strong> {{ patient.room_number }}</p>
+            <p><strong>Doctor:</strong> {{ patient.doctor_name }}</p>
+        </div>
+    </div>
+
+    <div class="alert alert-warning w-75 mx-auto mt-4">
+        <p>⚠️ This action <strong>cannot be undone</strong>. To confirm, type the patient code below:</p>
+        <form action="/delete_patient/{{ patient.patient_code }}" method="post">
+            <div class="mb-3">
+                <input type="text" name="confirm_code" class="form-control" placeholder="Enter patient code to confirm" required>
+            </div>
+            <button type="submit" class="btn btn-danger">🗑 Permanently Delete Patient</button>
+            <a href="/patient_detail/{{ patient.patient_code }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+<form action="/register" method="post" class="mx-auto" style="max-width: 400px;">
+    <div class="mb-3">
+        <input autocomplete="off" autofocus class="form-control" 
+               name="username" placeholder="Username" type="text" required>
+    </div>
+    <div class="mb-3 input-group">
+        <input class="form-control" id="password" name="password" placeholder="Password" type="password" required>
+        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password', this)">👁️</button>
+    </div>
+    <div class="mb-3 input-group">
+        <input class="form-control" id="confirmation" name="confirmation" placeholder="Confirm Password" type="password" required>
+        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmation', this)">👁️</button>
+    </div>
+    <button class="btn btn-primary w-100" type="submit">Register</button>
+</form>
+
+<script>
+function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+        btn.textContent = "🙈";
+    } else {
+        field.type = "password";
+        btn.textContent = "👁️";
+    }
+}
+</script>
+{% endblock %}

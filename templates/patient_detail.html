@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Patient Details
+{% endblock %}
+
+{% block main %}
+    <h1 class="mb-4">🧾 Patient Details</h1>
+
+    <div class="card w-75 mx-auto text-start shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">{{ patient.patient_name }}</h4>
+            <h6 class="card-subtitle mb-2 text-muted">Record Date: {{ patient.date }}</h6>
+            <p><strong>Blood Group:</strong> {{ patient.blood_group }}</p>
+            <p><strong>Weight:</strong> {{ patient.weight }} kg</p>
+            <p><strong>Height:</strong> {{ patient.height }} cm</p>
+            <p><strong>Allergies:</strong> {{ patient.allergies }}</p>
+            <p><strong>Past Treatments:</strong> {{ patient.past_treatments }}</p>
+            <p><strong>Past Diseases:</strong> {{ patient.past_diseases }}</p>
+            <p><strong>Doctor:</strong> {{ patient.doctor_name }}</p>
+            <p><strong>Room Number:</strong> {{ patient.room_number }}</p>
+            <p><strong>Past Doctor:</strong> {{ patient.past_doctor_name }}</p>
+            <p><strong>Insurance Company:</strong> {{ patient.insurance_company }}</p>
+        </div>
+    </div>
+
+    <a href="/search_patient?q={{ patient.patient_name }}" class="btn btn-secondary mt-4">⬅ Back to Search</a>
+    {% if session["role"] in ["staff", "admin"] %}
+    <div class="text-center mt-4">
+        <a href="/confirm_delete/{{ patient.patient_code }}" class="btn btn-danger">
+            🗑 Delete Patient
+        </a>
+    </div>
+    {% endif %}
+
+{% endblock %}

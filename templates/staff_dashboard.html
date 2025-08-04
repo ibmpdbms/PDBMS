@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Staff Dashboard
+{% endblock %}
+
+{% block main %}
+    <h1 class="mb-4">👩‍⚕️ Staff Dashboard</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Add Patient</h5>
+                    <p class="card-text">Register a new patient into the database.</p>
+                    <a href="/add_patient" class="btn btn-primary">➕ Add</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Search Patients</h5>
+                    <p class="card-text">Find and view patient medical records.</p>
+                    <a href="/search_patient" class="btn btn-success">🔍 Search</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
