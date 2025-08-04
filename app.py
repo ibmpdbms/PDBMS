@@ -30,7 +30,6 @@ def login():
     msg = request.args.get("msg")
     if msg:
         flash(msg)
-
     if request.method == "POST":
         username = request.form.get("username").lower().strip()
         password = request.form.get("password")
@@ -57,10 +56,14 @@ def login():
                 session["patient_code"] = None
 
         # Redirect
-        if rows[0]["role"] in ["staff", "admin"]:
+        # Redirect based on role
+        if rows[0]["role"] == "admin":
+            return redirect("/admin_dashboard")
+        elif rows[0]["role"] == "staff":
             return redirect("/staff_dashboard")
         elif rows[0]["role"] == "patient":
             return redirect("/patient_dashboard")
+
 
     return render_template("login.html")
 
@@ -200,8 +203,6 @@ def search_patient():
     
     return render_template("search_patient.html", patients=patients)
 
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "GET":
@@ -221,27 +222,65 @@ def register():
             return apology("Passwords Don't Match!")
 
         hash = generate_password_hash(password)
+        user_uuid = str(uuid.uuid4())[:8]  # ✅ Generate unique short UUID for patient
 
         try:
             new_user = db.execute(
-                "INSERT INTO users (username, hash, role) VALUES(?, ?, ?)",
-                username, hash, "patient"
+                "INSERT INTO users (username, hash, role, uuid) VALUES (?, ?, ?, ?)",
+                username, hash, "patient", user_uuid
             )
         except:
             return apology("This Username already exists. Please try another one")
 
-        # Try to find existing patient_code for this user
-        patient_record = db.execute("SELECT patient_code FROM records WHERE patient_name = ?", username)
-
-        if patient_record:
-            session["patient_code"] = patient_record[0]["patient_code"]
-        else:
-            session["patient_code"] = None  # will need staff to assign
-
+        # Store session info
         session["user_id"] = new_user
         session["role"] = "patient"
+        session["patient_code"] = None  # will be assigned later by staff when adding medical records
 
+        flash(f"✅ Patient registered successfully! UUID: {user_uuid}")
         return redirect("/patient_dashboard")
+
+
+# @app.route("/register", methods=["GET", "POST"])
+# def register():
+#     if request.method == "GET":
+#         return render_template("register.html")
+#     else:
+#         username = request.form.get("username").lower().strip()
+#         password = request.form.get("password")
+#         confirmation = request.form.get("confirmation")
+
+#         if not username:
+#             return apology("Must Provide Username")
+#         if not password:
+#             return apology("Must Provide Password")
+#         if not confirmation:
+#             return apology("Must Provide Confirmation")
+#         if password != confirmation:
+#             return apology("Passwords Don't Match!")
+
+#         hash = generate_password_hash(password)
+
+#         try:
+#             new_user = db.execute(
+#                 "INSERT INTO users (username, hash, role) VALUES(?, ?, ?)",
+#                 username, hash, "patient"
+#             )
+#         except:
+#             return apology("This Username already exists. Please try another one")
+
+#         # Try to find existing patient_code for this user
+#         patient_record = db.execute("SELECT patient_code FROM records WHERE patient_name = ?", username)
+
+#         if patient_record:
+#             session["patient_code"] = patient_record[0]["patient_code"]
+#         else:
+#             session["patient_code"] = None  # will need staff to assign
+
+#         session["user_id"] = new_user
+#         session["role"] = "patient"
+
+#         return redirect("/patient_dashboard")
 
 
 @app.route("/register_staff", methods=["GET", "POST"])
@@ -254,12 +293,15 @@ def register_staff():
         username = request.form.get("username")
         password = request.form.get("password")
         hash = generate_password_hash(password)
+        staff_uuid = str(uuid.uuid4())[:8]  # short unique ID
         try:
-            db.execute("INSERT INTO users (username, hash, role) VALUES (?, ?, ?)",
-                       username, hash, "staff")
+             db.execute(
+                "INSERT INTO users (username, hash, role, uuid) VALUES (?, ?, ?, ?)",
+                username, hash, "staff", staff_uuid
+            )
         except:
             return apology("Username already exists")
-        flash("Staff account created!")
+        flash(f"Staff account created! UUID: {staff_uuid}")
         return redirect("/admin_dashboard")
     return render_template("register_staff.html")
 
@@ -275,17 +317,73 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
+@app.route("/manage_patients")
+@login_required
+
+
+def manage_patients():
+    if session.get("role") != "admin":
+        return apology("access denied", 403)
+
+    patients = db.execute("SELECT id, username, role, uuid FROM users WHERE role = 'patient'")
+    return render_template("manage_patients.html", patients=patients)
+
+
+@app.route("/manage_staff")
+@login_required
+def manage_staff():
+    if session.get("role") != "admin":
+        return apology("access denied", 403)
+
+    staff = db.execute("SELECT id, username, role, uuid FROM users WHERE role = 'staff'")
+    return render_template("manage_staff.html", staff=staff)
+
+
+@app.route("/confirm_delete_user/<int:user_id>")
+@login_required
+def confirm_delete_user(user_id):
+    if session.get("role") != "admin":
+        return apology("access denied", 403)
+
+    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    if not user:
+        return apology("User not found", 404)
+
+    return render_template("confirm_delete_user.html", user=user[0])
+
+
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
+@login_required
+def delete_user(user_id):
+    if session.get("role") != "admin":
+        return apology("access denied", 403)
+
+    confirm_uuid = request.form.get("confirm_uuid")
+    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+
+    if not user:
+        return apology("User not found", 404)
+
+    if confirm_uuid != user[0]["uuid"]:
+        flash("❌ UUID mismatch. Deletion cancelled.")
+        return redirect(f"/confirm_delete_user/{user_id}")
+
+    db.execute("DELETE FROM users WHERE id = ?", user_id)
+    flash(f"✅ User account '{user[0]['username']}' deleted successfully.")
+    return redirect("/admin_dashboard")
+
 
 @app.context_processor
 def inject_user():
     try:
         if "user_id" in session:
-            user = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])
+            user = db.execute("SELECT username, role FROM users WHERE id = ?", session["user_id"])
             if user:
-                return {"username": user[0]["username"]}
+                return {"username": user[0]["username"], "role": user[0]["role"]}
     except:
         pass
     return {}
+
 
 @app.route("/generate_health_card", methods=["POST"])
 def generate_health_card():

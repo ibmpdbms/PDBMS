@@ -48,6 +48,7 @@
         <!-- Right-aligned auth links -->
             <div class="ms-auto d-flex align-items-center">
                 {% if session["user_id"] %}
+                <span class="navbar-test me-3">{{role | upper}}</span>
                 <span class="navbar-text me-3">User: {{ username }}</span>
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="/change_password">Change Password</a></li>

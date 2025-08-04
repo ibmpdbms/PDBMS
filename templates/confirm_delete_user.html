@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    ⚠️ Confirm User Account Deletion
+{% endblock %}
+
+{% block main %}
+    <h2>⚠️ Confirm User Account Deletion</h2>
+
+    <p>
+        <strong>{{ user.username.upper() }}</strong><br>
+        Role: {{ user.role.upper() }}<br>
+        <strong>UUID:</strong> {{ user.uuid }}
+    </p>
+
+    <div class="alert alert-danger">
+        ⚠️ This action cannot be undone. To confirm, type the UUID 
+        <strong>{{ user.uuid }}</strong> below:
+    </div>
+
+    <form action="/delete_user/{{ user.id }}" method="post">
+        <label for="confirm_uuid">Enter UUID to confirm</label>
+        <input type="text" name="confirm_uuid" id="confirm_uuid" required class="form-control mb-3">
+        
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="{{ request.referrer }}" class="btn btn-secondary">Cancel</a>
+    </form>
+{% endblock %}

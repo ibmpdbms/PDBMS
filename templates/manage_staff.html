@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Manage Staff Accounts
+{% endblock %}
+
+{% block main %}
+    <h2 class="mb-4">🧑‍⚕️ Manage Staff Accounts</h2>
+
+    {% if staff %}
+        <table class="table table-striped table-bordered w-75 mx-auto">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>UUID</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in staff %}
+                <tr>
+                    <td>{{ member.id }}</td>
+                    <td>{{ member.username }}</td>
+                    <td>{{ member.uuid or "—" }}</td>
+                    <td>
+                        <a href="/confirm_delete_user/{{ member.id }}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">No staff accounts found.</div>
+    {% endif %}
+{% endblock %}

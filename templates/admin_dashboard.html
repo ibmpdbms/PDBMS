@@ -5,31 +5,55 @@
 {% endblock %}
 
 {% block main %}
-    <h1 class="mb-4">👨‍💼 Admin Dashboard</h1>
-    
-    <div class="row justify-content-center">
-        
-        <!-- Register Staff Card -->
-        <div class="col-md-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Register Staff</h5>
-                    <p class="card-text">Create new staff accounts with secure credentials.</p>
-                    <a href="/register_staff" class="btn btn-primary">📝 Register Staff</a>
-                </div>
+<h2 class="mb-4">👨‍💼 Admin Dashboard</h2>
+
+<div class="row justify-content-center">
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="card-title">Register Staff</h5>
+                <p class="card-text">Create new staff accounts with secure credentials.</p>
+                <a href="/register_staff" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Register Staff
+                </a>
             </div>
         </div>
-
-        <!-- Staff Dashboard Card -->
-        <div class="col-md-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Staff Dashboard</h5>
-                    <p class="card-text">Access patient management tools like staff members.</p>
-                    <a href="/staff_dashboard" class="btn btn-success">👩‍⚕️ Go to Staff Dashboard</a>
-                </div>
-            </div>
-        </div>
-
     </div>
+
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="card-title">Staff Dashboard</h5>
+                <p class="card-text">Access patient management tools.</p>
+                <a href="/staff_dashboard" class="btn btn-success">
+                    <i class="bi bi-people"></i> Go to Staff Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="card-title">Manage Patient Accounts</h5>
+                <p class="card-text">View and delete patient user accounts.</p>
+                <a href="/manage_patients" class="btn btn-danger">
+                    <i class="bi bi-person-x"></i> Manage Patients Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="card-title">Manage Staff Accounts</h5>
+                <p class="card-text">View and delete staff user accounts.</p>
+                <a href="/manage_staff" class="btn btn-warning">
+                    <i class="bi bi-person-lines-fill"></i> Manage Staff Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
