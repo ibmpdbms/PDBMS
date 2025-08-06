@@ -1,0 +1,18 @@
+# Ignore environment files
+.env
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore Flask session files
+flask_session/
+instance/
+
+# Ignore uploads if needed
+uploads/
+
+# Ignore temporary files
+*.log
+*.sqlite3
+*.db
