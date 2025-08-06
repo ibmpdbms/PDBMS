@@ -16,3 +16,8 @@ uploads/
 *.log
 *.sqlite3
 *.db
+
+# Ignore Flask session data and __pycache__
+flask_session/
+__pycache__/
+*.pyc

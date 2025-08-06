@@ -1,0 +1,9 @@
+Flask
+Flask-Session
+python-dotenv
+cs50
+Werkzeug
+fpdf
+ibm-watson
+ibm-cloud-sdk-core
+pandas

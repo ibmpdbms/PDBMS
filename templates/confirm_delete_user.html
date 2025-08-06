@@ -18,12 +18,14 @@
     <div class="alert alert-warning w-75 mx-auto mt-4">
         <p>⚠️ This action <strong>cannot be undone</strong>. To confirm, type the UUID below:</p>
         <form action="/delete_user/{{ user.id }}" method="post">
+            <input type="hidden" name="next" value="{{ referrer }}">
             <div class="mb-3">
                 <input type="text" name="confirm_uuid" class="form-control" 
-                       placeholder="Enter UUID to confirm" required>
+                    placeholder="Enter UUID to confirm" required autofocus>
             </div>
             <button type="submit" class="btn btn-danger">🗑 Permanently Delete User</button>
-            <a href="{{ request.referrer }}" class="btn btn-secondary">Cancel</a>
+            <a href="{{ referrer }}" class="btn btn-secondary">Cancel</a>
         </form>
+
     </div>
 {% endblock %}

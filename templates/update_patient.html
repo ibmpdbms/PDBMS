@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Update Patient Record
+{% endblock %}
+
+{% block main %}
+    <h1 class="mb-4">✏️ Update Patient Record</h1>
+
+    <form action="/update_patient/{{ patient.patient_code }}" method="post" class="w-75 mx-auto text-start">
+
+        <div class="mb-3">
+            <label for="patient_name" class="form-label">Patient Name</label>
+            <input class="form-control" name="patient_name" type="text" required value="{{ patient.patient_name }}">
+        </div>
+
+        <div class="mb-3">
+            <label for="blood_group" class="form-label">Blood Group</label>
+            <select class="form-control" name="blood_group" required>
+                <option value="" disabled>Select blood group</option>
+                {% for bg in ["A+","A-","B+","B-","AB+","AB-","O+","O-"] %}
+                    <option value="{{ bg }}" {% if patient.blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="weight" class="form-label">Weight (kg)</label>
+                <input class="form-control" name="weight" type="number" value="{{ patient.weight }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="height" class="form-label">Height (cm)</label>
+                <input class="form-control" name="height" type="number" value="{{ patient.height }}">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Allergies</label>
+            <textarea class="form-control auto-expand" name="allergies" rows="2">{{ patient.allergies }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Past Treatments</label>
+            <textarea class="form-control auto-expand" name="past_treatments" rows="2">{{ patient.past_treatments }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Past Diseases</label>
+            <textarea class="form-control auto-expand" name="past_diseases" rows="2">{{ patient.past_diseases }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Doctor Name</label>
+            <input class="form-control" name="doctor_name" type="text" value="{{ patient.doctor_name }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Room Number</label>
+            <input class="form-control" name="room_number" type="text" value="{{ patient.room_number }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Past Doctor Name</label>
+            <input class="form-control" name="past_doctor_name" type="text" value="{{ patient.past_doctor_name }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Insurance Company</label>
+            <input class="form-control" name="insurance_company" type="text" value="{{ patient.insurance_company }}">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Doctor Notes</label>
+            <textarea class="form-control auto-expand" name="doctor_notes" rows="3">{{ patient.doctor_notes }}</textarea>
+        </div>
+
+        <button class="btn btn-success" type="submit">Update Record</button>
+    </form>
+{% endblock %}

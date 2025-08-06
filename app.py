@@ -1,3 +1,15 @@
+import subprocess
+import sys
+def install_requirements():
+    try:
+        import flask  # test import for a core dependency
+    except ImportError:
+        print("🔧 Installing dependencies from requirements.txt...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        print("✅ Dependencies installed successfully!")
+
+install_requirements()
+
 import os
 from dotenv import load_dotenv
 from cs50 import SQL
@@ -12,7 +24,7 @@ from fpdf import FPDF
 import tempfile
 from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_watson.natural_language_understanding_v1 import Features, KeywordsOptions, CategoriesOptions
+from ibm_watson.natural_language_understanding_v1 import Features, KeywordsOptions
 formatted_time = datetime.now(ZoneInfo("Asia/Kolkata"))
 now_in_india = formatted_time.strftime("%Y-%m-%d %H:%M:%S %Z") 
 app = Flask(__name__)
@@ -212,6 +224,49 @@ def add_patient():
     
     return render_template("add_patient.html")
 
+@app.route("/update_patient/<string:patient_code>", methods=["GET", "POST"])
+@login_required
+def update_patient(patient_code):
+    if session.get("role") not in ["staff", "admin"]:
+        return apology("access denied", 403)
+
+    # Fetch patient record
+    patient = db.execute("SELECT * FROM records WHERE patient_code = ?", patient_code)
+    if not patient:
+        return apology("Patient not found", 404)
+    patient = patient[0]
+
+    if request.method == "POST":
+        # Update record
+        db.execute("""
+            UPDATE records
+            SET patient_name = ?, blood_group = ?, weight = ?, height = ?,
+                allergies = ?, past_treatments = ?, past_diseases = ?,
+                doctor_name = ?, room_number = ?, past_doctor_name = ?,
+                insurance_company = ?, doctor_notes = ?
+            WHERE patient_code = ?
+        """,
+           request.form.get("patient_name").strip().lower(),
+           request.form.get("blood_group"),
+           request.form.get("weight"),
+           request.form.get("height"),
+           request.form.get("allergies"),
+           request.form.get("past_treatments"),
+           request.form.get("past_diseases"),
+           request.form.get("doctor_name").strip().upper(),
+           request.form.get("room_number"),
+           request.form.get("past_doctor_name").strip().upper(),
+           request.form.get("insurance_company").strip().upper(),
+           request.form.get("doctor_notes"),
+           patient_code
+        )
+
+        flash("✅ Patient record updated successfully!")
+        return redirect(f"/patient_detail/{patient_code}")
+
+    return render_template("update_patient.html", patient=patient)
+
+
 
 @app.route("/patient_detail/<string:patient_code>")
 @login_required
@@ -376,7 +431,7 @@ def confirm_delete_user(user_id):
     if not user:
         return apology("User not found", 404)
 
-    return render_template("confirm_delete_user.html", user=user[0])
+    return render_template("confirm_delete_user.html", user=user[0],referrer=request.referrer or url_for("admin_dashboard"))
 
 @app.route("/link_patient/<int:user_id>", methods=["GET", "POST"])
 @login_required
@@ -424,8 +479,8 @@ def delete_user(user_id):
         return apology("access denied", 403)
 
     confirm_uuid = request.form.get("confirm_uuid")
+    next_url = request.form.get("next")
     user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
-
     if not user:
         return apology("User not found", 404)
 
@@ -435,7 +490,7 @@ def delete_user(user_id):
 
     db.execute("DELETE FROM users WHERE id = ?", user_id)
     flash(f"✅ User account '{user[0]['username']}' deleted successfully.")
-    return redirect("/admin_dashboard")
+    return redirect(next_url or url_for("admin_dashboard"))
 
 
 @app.context_processor
@@ -522,7 +577,7 @@ def download_health_card(patient_code):
             key_terms = {kw["text"] for kw in analysis.get("keywords", [])}
             blacklist = {
                 "none", "n/a", "last", "patient", "routine",
-                "check", "ago", "hours", "drip", "seen", "stable"
+                "check", "ago", "hours", "drip", "seen", "stable", "hour", "discharge"
             }
             current_factors = {
                 term for term in key_terms
@@ -596,3 +651,6 @@ def download_health_card(patient_code):
 
     return send_file(temp_file.name, as_attachment=True,
                      download_name=f"{patient_code}_{patient['patient_name']}_health_card.pdf")
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
