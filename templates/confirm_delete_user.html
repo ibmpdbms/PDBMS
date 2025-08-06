@@ -11,6 +11,8 @@
         <div class="card-body text-start">
             <h5 class="card-title text-danger">{{ user.username.upper() }}</h5>
             <p><strong>Role:</strong> {{ user.role.upper() }}</p>
+            <p><strong>Email:</strong> {{ linked_user.email if linked_user else "No linked patient account found" }}</p>
+            <p><strong>Phone:</strong> {{ linked_user.phone_number if linked_user else "—" }}</p>
             <p><strong>UUID:</strong> <span class="text-danger">{{ user.uuid }}</span></p>
         </div>
     </div>
@@ -26,6 +28,5 @@
             <button type="submit" class="btn btn-danger">🗑 Permanently Delete User</button>
             <a href="{{ referrer }}" class="btn btn-secondary">Cancel</a>
         </form>
-
     </div>
 {% endblock %}

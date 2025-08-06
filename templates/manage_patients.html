@@ -13,6 +13,8 @@
                 <tr>
                     <th>ID</th>
                     <th>Username</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
                     <th>UUID</th>
                     <th>Patient Code</th>
                     <th>Actions</th>
@@ -23,6 +25,8 @@
                 <tr>
                     <td>{{ patient.id }}</td>
                     <td>{{ patient.username }}</td>
+                    <td>{{ patient.email or "—" }}</td>
+                    <td>{{ patient.phone_number or "—" }}</td>
                     <td>{{ patient.uuid or "—" }}</td>
                     <td>
                         {% if patient.patient_code %}
@@ -34,7 +38,11 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="/confirm_delete_user/{{ patient.id }}" class="btn btn-danger btn-sm">Delete</a>
+                        {% if patient.patient_code %}
+                            <a href="/confirm_delete/{{ patient.patient_code }}" class="btn btn-danger btn-sm">Delete</a>
+                        {% else %}
+                            <span class="text-muted">No record</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

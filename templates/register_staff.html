@@ -7,18 +7,21 @@
 {% block main %}
 <h2 class="mb-4">Create Staff Account</h2>
 
-<form action="/register_staff" method="post" class="mx-auto" style="max-width: 400px;">
+<form action="/register_staff" method="post" class="mx-auto" style="max-width: 400px;" id="staffForm">
     <div class="mb-3">
-        <input class="form-control" name="username" placeholder="Username" type="text" required>
+        <input class="form-control" name="username" id="staff_username" placeholder="Username" type="text" required>
+        <div id="usernameFeedback" class="form-text text-danger"></div>
     </div>
     <div class="mb-3 input-group">
         <input class="form-control" id="staff_password" name="password" placeholder="Password" type="password" required>
         <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('staff_password', this)">👁️</button>
     </div>
+    <div id="passwordFeedback" class="form-text text-danger mb-3"></div>
     <div class="mb-3 input-group">
         <input class="form-control" id="staff_confirmation" name="confirmation" placeholder="Confirm Password" type="password" required>
         <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('staff_confirmation', this)">👁️</button>
     </div>
+    <div id="confirmationFeedback" class="form-text text-danger mb-3"></div>
     <button class="btn btn-primary w-100" type="submit">Register Staff</button>
 </form>
 
@@ -33,5 +36,52 @@ function togglePassword(fieldId, btn) {
         btn.textContent = "👁️";
     }
 }
+
+// Real-time validation
+const usernameField = document.getElementById("staff_username");
+const passwordField = document.getElementById("staff_password");
+const confirmationField = document.getElementById("staff_confirmation");
+
+const usernameFeedback = document.getElementById("usernameFeedback");
+const passwordFeedback = document.getElementById("passwordFeedback");
+const confirmationFeedback = document.getElementById("confirmationFeedback");
+
+usernameField.addEventListener("input", () => {
+    if (usernameField.value.trim().length < 3) {
+        usernameFeedback.textContent = "❌ Username must be at least 3 characters long.";
+    } else {
+        usernameFeedback.textContent = "";
+    }
+});
+
+passwordField.addEventListener("input", () => {
+    if (passwordField.value.length < 5) {
+        passwordFeedback.textContent = "❌ Password must be at least 5 characters.";
+    } else {
+        passwordFeedback.textContent = "";
+    }
+    // re-check confirmation on password change
+    confirmationField.dispatchEvent(new Event("input"));
+});
+
+confirmationField.addEventListener("input", () => {
+    if (confirmationField.value !== passwordField.value) {
+        confirmationFeedback.textContent = "❌ Passwords do not match.";
+    } else {
+        confirmationFeedback.textContent = "";
+    }
+});
+
+// Prevent form submission if validation fails
+document.getElementById("staffForm").addEventListener("submit", (e) => {
+    if (
+        usernameFeedback.textContent ||
+        passwordFeedback.textContent ||
+        confirmationFeedback.textContent
+    ) {
+        e.preventDefault();
+        alert("Please fix validation errors before submitting.");
+    }
+});
 </script>
 {% endblock %}

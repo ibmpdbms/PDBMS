@@ -5,19 +5,35 @@
 {% endblock %}
 
 {% block main %}
-<form action="/register" method="post" class="mx-auto" style="max-width: 400px;">
+<form id="registerForm" action="/register" method="post" class="mx-auto" style="max-width: 400px;">
     <div class="mb-3">
         <input autocomplete="off" autofocus class="form-control" 
                name="username" placeholder="Username" type="text" required>
     </div>
+    
     <div class="mb-3 input-group">
         <input class="form-control" id="password" name="password" placeholder="Password" type="password" required>
         <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password', this)">👁️</button>
     </div>
+    <small class="text-danger d-none" id="passwordError">Password must be at least 5 characters.</small>
+
     <div class="mb-3 input-group">
         <input class="form-control" id="confirmation" name="confirmation" placeholder="Confirm Password" type="password" required>
         <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmation', this)">👁️</button>
     </div>
+    <small class="text-danger d-none" id="confirmError">Passwords do not match.</small>
+
+    <div class="mb-3">
+        <input class="form-control" id="email" name="email" placeholder="Email" type="email" required>
+        <small class="text-danger d-none" id="emailError">Enter a valid email address.</small>
+    </div>
+    
+    <div class="mb-3">
+        <input class="form-control" id="phone_number" name="phone_number" placeholder="Phone Number" 
+               type="text" required>
+        <small class="text-danger d-none" id="phoneError">Phone number must be exactly 10 digits.</small>
+    </div>
+
     <button class="btn btn-primary w-100" type="submit">Register</button>
 </form>
 
@@ -32,5 +48,47 @@ function togglePassword(fieldId, btn) {
         btn.textContent = "👁️";
     }
 }
+
+// Real-time validation
+document.getElementById("password").addEventListener("input", function () {
+    const error = document.getElementById("passwordError");
+    error.classList.toggle("d-none", this.value.length >= 5);
+});
+
+document.getElementById("confirmation").addEventListener("input", function () {
+    const error = document.getElementById("confirmError");
+    error.classList.toggle("d-none", this.value === document.getElementById("password").value);
+});
+
+document.getElementById("email").addEventListener("input", function () {
+    const error = document.getElementById("emailError");
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    error.classList.toggle("d-none", regex.test(this.value));
+});
+
+document.getElementById("phone_number").addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, ""); // Only digits allowed
+    if (this.value.length > 10) {
+        this.value = this.value.slice(0, 10); // Prevent typing more than 10 digits
+    }
+    const error = document.getElementById("phoneError");
+    error.classList.toggle("d-none", this.value.length === 10);
+});
+
+// Prevent submission if invalid
+document.getElementById("registerForm").addEventListener("submit", function (e) {
+    const password = document.getElementById("password").value;
+    const confirmation = document.getElementById("confirmation").value;
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone_number").value;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (password.length < 5 || password !== confirmation || 
+        !emailRegex.test(email) || phone.length !== 10) {
+        e.preventDefault();
+        alert("Please fix the errors before submitting.");
+    }
+});
 </script>
 {% endblock %}

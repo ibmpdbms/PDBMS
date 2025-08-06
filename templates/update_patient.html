@@ -7,11 +7,46 @@
 {% block main %}
     <h1 class="mb-4">✏️ Update Patient Record</h1>
 
-    <form action="/update_patient/{{ patient.patient_code }}" method="post" class="w-75 mx-auto text-start">
+    <form id="updateForm" action="/update_patient/{{ patient.patient_code }}" method="post" class="w-75 mx-auto text-start">
 
         <div class="mb-3">
             <label for="patient_name" class="form-label">Patient Name</label>
-            <input class="form-control" name="patient_name" type="text" required value="{{ patient.patient_name }}">
+            <input class="form-control" name="patient_name" type="text" required
+                   value="{{ patient.patient_name if patient.patient_name is not none else '' }}"
+                   placeholder="Enter Patient Name">
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="age" class="form-label">Age</label>
+                <input class="form-control" id="age" name="age" type="number" min="0" max="100"
+                       value="{{ patient.age if patient.age is not none else '' }}"
+                       placeholder="Enter Age">
+                <small class="text-danger d-none" id="ageError">Age must be between 0 and 100.</small>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="patient_contact_number" class="form-label">Patient Contact Number</label>
+                <input class="form-control" id="patient_contact_number" name="patient_contact_number" type="text" maxlength="10"
+                       value="{{ patient.patient_contact_number if patient.patient_contact_number is not none else '' }}"
+                       placeholder="Enter Patient Contact Number">
+                <small class="text-danger d-none" id="patientPhoneError">Phone number must be exactly 10 digits.</small>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="emergency_contact_name" class="form-label">Emergency Contact Name</label>
+                <input class="form-control" name="emergency_contact_name" type="text"
+                       value="{{ patient.emergency_contact_name if patient.emergency_contact_name is not none else '' }}"
+                       placeholder="Enter Emergency Contact Name">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="emergency_contact" class="form-label">Emergency Contact Number</label>
+                <input class="form-control" id="emergency_contact" name="emergency_contact" type="text" maxlength="10"
+                       value="{{ patient.emergency_contact if patient.emergency_contact is not none else '' }}"
+                       placeholder="Enter Emergency Contact Number">
+                <small class="text-danger d-none" id="emergencyPhoneError">Phone number must be exactly 10 digits.</small>
+            </div>
         </div>
 
         <div class="mb-3">
@@ -27,54 +62,105 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="weight" class="form-label">Weight (kg)</label>
-                <input class="form-control" name="weight" type="number" value="{{ patient.weight }}">
+                <input class="form-control" name="weight" type="number"
+                       value="{{ patient.weight if patient.weight is not none else '' }}"
+                       placeholder="Enter Weight">
             </div>
             <div class="col-md-6 mb-3">
                 <label for="height" class="form-label">Height (cm)</label>
-                <input class="form-control" name="height" type="number" value="{{ patient.height }}">
+                <input class="form-control" name="height" type="number"
+                       value="{{ patient.height if patient.height is not none else '' }}"
+                       placeholder="Enter Height">
             </div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Allergies</label>
-            <textarea class="form-control auto-expand" name="allergies" rows="2">{{ patient.allergies }}</textarea>
+            <textarea class="form-control auto-expand" name="allergies" rows="2" style="resize: none;"
+                      placeholder="Enter Allergies">{{ patient.allergies if patient.allergies is not none else '' }}</textarea>
         </div>
-
         <div class="mb-3">
             <label class="form-label">Past Treatments</label>
-            <textarea class="form-control auto-expand" name="past_treatments" rows="2">{{ patient.past_treatments }}</textarea>
+            <textarea class="form-control auto-expand" name="past_treatments" rows="2" style="resize: none;"
+                      placeholder="Enter Past Treatments">{{ patient.past_treatments if patient.past_treatments is not none else '' }}</textarea>
         </div>
-
         <div class="mb-3">
             <label class="form-label">Past Diseases</label>
-            <textarea class="form-control auto-expand" name="past_diseases" rows="2">{{ patient.past_diseases }}</textarea>
+            <textarea class="form-control auto-expand" name="past_diseases" rows="2" style="resize: none;"
+                      placeholder="Enter Past Diseases">{{ patient.past_diseases if patient.past_diseases is not none else '' }}</textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Doctor Name</label>
-            <input class="form-control" name="doctor_name" type="text" value="{{ patient.doctor_name }}">
+            <input class="form-control" name="doctor_name" type="text"
+                   value="{{ patient.doctor_name if patient.doctor_name is not none else '' }}"
+                   placeholder="Enter Doctor Name">
         </div>
-
         <div class="mb-3">
             <label class="form-label">Room Number</label>
-            <input class="form-control" name="room_number" type="text" value="{{ patient.room_number }}">
+            <input class="form-control" name="room_number" type="text"
+                   value="{{ patient.room_number if patient.room_number is not none else '' }}"
+                   placeholder="Enter Room Number">
         </div>
-
         <div class="mb-3">
             <label class="form-label">Past Doctor Name</label>
-            <input class="form-control" name="past_doctor_name" type="text" value="{{ patient.past_doctor_name }}">
+            <input class="form-control" name="past_doctor_name" type="text"
+                   value="{{ patient.past_doctor_name if patient.past_doctor_name is not none else '' }}"
+                   placeholder="Enter Past Doctor Name">
         </div>
-
         <div class="mb-3">
             <label class="form-label">Insurance Company</label>
-            <input class="form-control" name="insurance_company" type="text" value="{{ patient.insurance_company }}">
+            <input class="form-control" name="insurance_company" type="text"
+                   value="{{ patient.insurance_company if patient.insurance_company is not none else '' }}"
+                   placeholder="Enter Insurance Company">
         </div>
 
         <div class="mb-3">
             <label class="form-label">Doctor Notes</label>
-            <textarea class="form-control auto-expand" name="doctor_notes" rows="3">{{ patient.doctor_notes }}</textarea>
+            <textarea class="form-control auto-expand" name="doctor_notes" rows="3" style="resize: none;"
+                      placeholder="Enter Doctor Notes">{{ patient.doctor_notes if patient.doctor_notes is not none else '' }}</textarea>
+            <small class="form-text text-muted">
+                Notes about patient condition, advice, or observations.
+            </small>
         </div>
 
         <button class="btn btn-success" type="submit">Update Record</button>
     </form>
+
+    <script>
+    // Restrict Age
+    document.getElementById("age").addEventListener("input", function () {
+        const error = document.getElementById("ageError");
+        if (this.value < 0 || this.value > 100) error.classList.remove("d-none");
+        else error.classList.add("d-none");
+    });
+
+    // Patient phone validation
+    document.getElementById("patient_contact_number").addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, ''); // only digits
+        const error = document.getElementById("patientPhoneError");
+        if (this.value.length !== 10) error.classList.remove("d-none");
+        else error.classList.add("d-none");
+    });
+
+    // Emergency phone validation
+    document.getElementById("emergency_contact").addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, '');
+        const error = document.getElementById("emergencyPhoneError");
+        if (this.value.length !== 10) error.classList.remove("d-none");
+        else error.classList.add("d-none");
+    });
+
+    // Prevent form submit if invalid
+    document.getElementById("updateForm").addEventListener("submit", function (e) {
+        const age = document.getElementById("age").value;
+        const patientPhone = document.getElementById("patient_contact_number").value;
+        const emergencyPhone = document.getElementById("emergency_contact").value;
+
+        if (age < 0 || age > 100 || patientPhone.length !== 10 || emergencyPhone.length !== 10) {
+            e.preventDefault();
+            alert("Please fix the errors before submitting.");
+        }
+    });
+    </script>
 {% endblock %}

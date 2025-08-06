@@ -48,10 +48,12 @@ def login():
     msg = request.args.get("msg")
     if msg:
         flash(msg)
+
     if request.method == "POST":
         username = request.form.get("username").lower().strip()
         password = request.form.get("password")
 
+        # Basic checks
         if not username:
             return apology("must provide username", 403)
         if not password:
@@ -59,13 +61,19 @@ def login():
 
         rows = db.execute("SELECT * FROM users WHERE username = ?", username)
 
+        # Check credentials
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], password):
             return apology("Invalid username and/or password", 403)
 
+        # Extra protection for admin login
+        if rows[0]["role"] == "admin" and username != "admin":
+            return apology("Unauthorized access attempt", 403)
+
+        # Save session
         session["user_id"] = rows[0]["id"]
         session["role"] = rows[0]["role"]
 
-        # If patient, also fetch patient_code
+        # If patient, fetch patient_code
         if rows[0]["role"] == "patient":
             code = db.execute("SELECT patient_code FROM records WHERE patient_name = ?", username)
             if code:
@@ -73,7 +81,6 @@ def login():
             else:
                 session["patient_code"] = None
 
-        # Redirect
         # Redirect based on role
         if rows[0]["role"] == "admin":
             return redirect("/admin_dashboard")
@@ -82,8 +89,8 @@ def login():
         elif rows[0]["role"] == "patient":
             return redirect("/patient_dashboard")
 
-
     return render_template("login.html")
+
 
 
 @app.route("/change_password", methods=["GET", "POST"])
@@ -127,20 +134,30 @@ def change_pw():
 @login_required
 def confirm_delete(patient_code):
     if session.get("role") not in ["staff", "admin"]:
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
-    patient = db.execute("SELECT * FROM records WHERE patient_code = ?", patient_code)
+    # Fetch patient details with user info
+    patient = db.execute("""
+        SELECT r.*, u.email, u.phone_number
+        FROM records r
+        LEFT JOIN users u ON LOWER(u.username) = LOWER(r.patient_name)
+        WHERE r.patient_code = ?
+    """, patient_code)
+
     if not patient:
         return apology("Patient not found", 404)
 
     return render_template("confirm_delete.html", patient=patient[0])
 
 
+
+
+
 @app.route("/delete_patient/<patient_code>", methods=["POST"])
 @login_required
 def delete_patient(patient_code):
     if session.get("role") not in ["staff", "admin"]:
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     confirm_code = request.form.get("confirm_code")
 
@@ -157,7 +174,7 @@ def delete_patient(patient_code):
 @login_required
 def staff_dashboard():
     if session.get("role") not in ["staff", "admin"]:
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     return render_template("staff_dashboard.html")
 
@@ -165,7 +182,7 @@ def staff_dashboard():
 @login_required
 def patient_dashboard():
     if session.get("role") != "patient":
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     # Ensure patient has a linked patient_code
     patient_code = session.get("patient_code")
@@ -184,14 +201,14 @@ def patient_dashboard():
 @login_required
 def admin_dashboard():
     if session.get("role") != "admin":
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
     return render_template("admin_dashboard.html")
 
 @app.route("/add_patient", methods=["GET", "POST"])
 @login_required
 def add_patient():
     if session.get("role") not in ["staff", "admin"]:
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
     
     if request.method == "POST":
         patient_name = request.form.get("patient_name").strip().lower()
@@ -201,8 +218,8 @@ def add_patient():
             INSERT INTO records (patient_name, blood_group, weight, height,
                                  allergies, past_treatments, past_diseases,
                                  doctor_name, room_number, past_doctor_name,
-                                 insurance_company, doctor_notes,patient_code,date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                 insurance_company, doctor_notes,patient_code,date,age,emergency_contact_name, emergency_contact,patient_contact_number)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
            patient_name,
            request.form.get("blood_group"),
@@ -217,7 +234,11 @@ def add_patient():
            request.form.get("insurance_company").strip().upper(),
            request.form.get("doctor_notes"),
            patient_code,
-           now_in_india
+           now_in_india,
+           request.form.get("age"),
+           request.form.get("emergency_contact_name"),
+           request.form.get("emergency_contact"),
+           request.form.get("patient_contact_number")
         )
         flash(f"Patient record added successfully! Patient Code: {patient_code}")
         return redirect("/staff_dashboard")
@@ -228,7 +249,7 @@ def add_patient():
 @login_required
 def update_patient(patient_code):
     if session.get("role") not in ["staff", "admin"]:
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     # Fetch patient record
     patient = db.execute("SELECT * FROM records WHERE patient_code = ?", patient_code)
@@ -243,7 +264,8 @@ def update_patient(patient_code):
             SET patient_name = ?, blood_group = ?, weight = ?, height = ?,
                 allergies = ?, past_treatments = ?, past_diseases = ?,
                 doctor_name = ?, room_number = ?, past_doctor_name = ?,
-                insurance_company = ?, doctor_notes = ?
+                insurance_company = ?, doctor_notes = ?,
+                age = ?, emergency_contact_name = ?, emergency_contact = ?, patient_contact_number = ?
             WHERE patient_code = ?
         """,
            request.form.get("patient_name").strip().lower(),
@@ -258,6 +280,10 @@ def update_patient(patient_code):
            request.form.get("past_doctor_name").strip().upper(),
            request.form.get("insurance_company").strip().upper(),
            request.form.get("doctor_notes"),
+           request.form.get("age"),
+           request.form.get("emergency_contact_name"),
+           request.form.get("emergency_contact"),
+           request.form.get("patient_contact_number"),
            patient_code
         )
 
@@ -272,7 +298,7 @@ def update_patient(patient_code):
 @login_required
 def patient_detail(patient_code):
     if session.get("role") not in ["staff", "admin", "patient"]:
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     patient = db.execute("SELECT * FROM records WHERE patient_code = ?", patient_code)
 
@@ -281,7 +307,7 @@ def patient_detail(patient_code):
 
     # if patient, make sure they're only accessing their own record
     if session["role"] == "patient" and patient_code != session.get("patient_code"):
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     return render_template("patient_detail.html", patient=patient[0])
 
@@ -290,7 +316,7 @@ def patient_detail(patient_code):
 @login_required
 def search_patient():
     if session.get("role") not in ["staff", "admin"]:
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     # Render the template that contains the search UI
     return render_template("search_patient.html")
@@ -300,7 +326,7 @@ def search_patient():
 @login_required
 def api_search_patient():
     if session.get("role") not in ["staff", "admin"]:
-        return {"error": "access denied"}, 403
+        return {"error": "Access Denied"}, 403
     
     query = request.args.get("q", "").strip()
     if query:
@@ -327,60 +353,95 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
     else:
-        username = request.form.get("username").lower().strip()
+        username = request.form.get("username").strip()
+        email = request.form.get("email").lower().strip()
+        phone_number = request.form.get("phone_number").strip()
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
 
+        # Validation
         if not username:
-            return apology("Must Provide Username")
+            return apology("Must provide Username")
+        if not email:
+            return apology("Must provide Email")
+        if not phone_number:
+            return apology("Must provide Phone Number")
         if not password:
-            return apology("Must Provide Password")
+            return apology("Must provide Password")
         if not confirmation:
-            return apology("Must Provide Confirmation")
+            return apology("Must provide Confirmation")
         if password != confirmation:
-            return apology("Passwords Don't Match!")
+            return apology("Passwords don't match!")
+        if username.lower() in ["admin", "administrator", "root"]:
+            return apology("This username is reserved. Please choose another.")
 
+        # Uniqueness checks
+        if db.execute("SELECT id FROM users WHERE email = ?", email):
+            return apology("This Email is already registered.")
+        if db.execute("SELECT id FROM users WHERE phone_number = ?", phone_number):
+            return apology("This Phone Number is already registered.")
+
+        # Hash password and generate UUID
         hash = generate_password_hash(password)
-        user_uuid = str(uuid.uuid4())[:8]  # ✅ Generate unique short UUID for patient
+        user_uuid = str(uuid.uuid4())[:8]
 
         try:
             new_user = db.execute(
-                "INSERT INTO users (username, hash, role, uuid) VALUES (?, ?, ?, ?)",
-                username, hash, "patient", user_uuid
+                "INSERT INTO users (username, hash, role, uuid, email, phone_number) VALUES (?, ?, ?, ?, ?, ?)",
+                username, hash, "patient", user_uuid, email, phone_number
             )
         except:
             return apology("This Username already exists. Please try another one")
 
-        # Store session info
+        # Store session
         session["user_id"] = new_user
         session["role"] = "patient"
-        session["patient_code"] = None  # will be assigned later by staff when adding medical records
+        session["patient_code"] = None
 
         flash(f"✅ Patient registered successfully! UUID: {user_uuid}")
         return redirect("/patient_dashboard")
+
 
 
 @app.route("/register_staff", methods=["GET", "POST"])
 @login_required
 def register_staff():
     if session.get("role") != "admin":
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form.get("username").lower().strip()
         password = request.form.get("password")
+        confirmation = request.form.get("confirmation")
+
+        # Basic validations
+        if not username:
+            return apology("Must provide username")
+        if not password or not confirmation:
+            return apology("Must provide and confirm password")
+        if password != confirmation:
+            return apology("Passwords do not match")
+
+        # Block reserved admin username
+        if username == "admin":
+            return apology("This username is reserved for administrators")
+
         hash = generate_password_hash(password)
         staff_uuid = str(uuid.uuid4())[:8]  # short unique ID
+
         try:
-             db.execute(
+            db.execute(
                 "INSERT INTO users (username, hash, role, uuid) VALUES (?, ?, ?, ?)",
                 username, hash, "staff", staff_uuid
             )
         except:
             return apology("Username already exists")
-        flash(f"Staff account created! UUID: {staff_uuid}")
+
+        flash(f"✅ Staff account created! UUID: {staff_uuid}")
         return redirect("/admin_dashboard")
+
     return render_template("register_staff.html")
+
 
 @app.route("/about")
 def about():
@@ -394,89 +455,128 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
+
 @app.route("/manage_patients")
 @login_required
-
-
 def manage_patients():
     if session.get("role") != "admin":
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     patients = db.execute("""
-    SELECT u.id, u.username, u.role, u.uuid, r.patient_code
-    FROM users u
-    LEFT JOIN records r ON LOWER(u.username) = LOWER(r.patient_name)
-    WHERE u.role = 'patient'
+        SELECT u.id, u.username, u.uuid, u.email, u.phone_number, r.patient_code
+        FROM users u
+        LEFT JOIN records r ON LOWER(u.username) = LOWER(r.patient_name)
+        WHERE u.role = 'patient'
     """)
     return render_template("manage_patients.html", patients=patients)
+
 
 
 @app.route("/manage_staff")
 @login_required
 def manage_staff():
     if session.get("role") != "admin":
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     staff = db.execute("SELECT id, username, role, uuid FROM users WHERE role = 'staff'")
     return render_template("manage_staff.html", staff=staff)
-
-
-@app.route("/confirm_delete_user/<int:user_id>")
-@login_required
-def confirm_delete_user(user_id):
-    if session.get("role") != "admin":
-        return apology("access denied", 403)
-
-    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
-    if not user:
-        return apology("User not found", 404)
-
-    return render_template("confirm_delete_user.html", user=user[0],referrer=request.referrer or url_for("admin_dashboard"))
 
 @app.route("/link_patient/<int:user_id>", methods=["GET", "POST"])
 @login_required
 def link_patient(user_id):
     if session.get("role") != "admin":
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
     if not user:
         return apology("User not found", 404)
 
+    user = user[0]
+
     if request.method == "POST":
         patient_code = request.form.get("patient_code")
-        # Optionally verify this code exists
-        record = db.execute("SELECT * FROM records WHERE patient_code = ?", patient_code)
+
+        # Check if patient record exists and isn't already linked
+        record = db.execute("""
+            SELECT r.patient_code, r.patient_name
+            FROM records r
+            LEFT JOIN users u 
+                ON TRIM(LOWER(r.patient_name)) = TRIM(LOWER(u.username))
+            WHERE r.patient_code = ?
+        """, patient_code)
+
         if not record:
             flash("❌ Invalid patient code selected.")
             return redirect(f"/link_patient/{user_id}")
 
-        # Link by updating the patient_name in records (if needed)
-        db.execute("UPDATE records SET patient_name = ? WHERE patient_code = ?",
-                   user[0]["username"], patient_code)
-        flash(f"✅ Linked patient record {patient_code} to {user[0]['username']}.")
+        # Prevent linking if already tied to another user
+        already_linked = db.execute("""
+            SELECT 1 FROM records r
+            JOIN users u ON TRIM(LOWER(r.patient_name)) = TRIM(LOWER(u.username))
+            WHERE r.patient_code = ?
+        """, patient_code)
+
+        if already_linked:
+            flash("⚠️ This patient record is already linked to another account.")
+            return redirect(f"/link_patient/{user_id}")
+
+        # Link by updating patient_name to exact username
+        db.execute("""
+            UPDATE records 
+            SET patient_name = ?
+            WHERE patient_code = ?
+        """, user["username"].strip().lower(), patient_code)
+
+        flash(f"✅ Linked patient record {patient_code} to {user['username']}.")
         return redirect("/manage_patients")
 
-    # Fetch unlinked patient records
+    # Show only unlinked records
     unlinked = db.execute("""
         SELECT r.patient_code, r.patient_name
         FROM records r
-        LEFT JOIN users u ON LOWER(r.patient_name) = LOWER(u.username)
+        LEFT JOIN users u 
+            ON TRIM(LOWER(r.patient_name)) = TRIM(LOWER(u.username))
         WHERE u.id IS NULL
     """)
-    return render_template("link_patient.html", user=user[0], unlinked=unlinked)
+
+    return render_template("link_patient.html", user=user, unlinked=unlinked)
+
 
 @app.route("/customer_support")
 def customer_support():
     return render_template("customer_support.html")
 
+@app.route("/confirm_delete_user/<int:user_id>")
+@login_required
+def confirm_delete_user(user_id):
+    if session.get("role") != "admin":
+        return apology("Access Denied", 403)
 
+    # Fetch user
+    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    if not user:
+        return apology("User not found", 404)
+    user = user[0]
+
+    # Fetch linked patient (if any)
+    linked_patient = db.execute("""
+        SELECT r.patient_code
+        FROM records r
+        WHERE TRIM(LOWER(r.patient_name)) = TRIM(LOWER(?))
+    """, user["username"])
+
+    return render_template(
+        "confirm_delete_user.html",
+        user=user,
+        linked_patient=linked_patient[0] if linked_patient else None,
+        referrer=request.referrer or url_for("admin_dashboard")
+    )
 
 @app.route("/delete_user/<int:user_id>", methods=["POST"])
 @login_required
 def delete_user(user_id):
     if session.get("role") != "admin":
-        return apology("access denied", 403)
+        return apology("Access Denied", 403)
 
     confirm_uuid = request.form.get("confirm_uuid")
     next_url = request.form.get("next")
@@ -551,9 +651,9 @@ def interpret_recovery(notes: str) -> str:
 @app.route("/download_health_card/<string:patient_code>")
 @login_required
 def download_health_card(patient_code):
-    # Ensure correct access
+    # Ensure correct Access
     if session["role"] == "patient" and patient_code != session.get("patient_code"):
-        return apology("Access denied", 403)
+        return apology("Access Denied", 403)
 
     patient = db.execute("SELECT * FROM records WHERE patient_code = ?", patient_code)
     if not patient:

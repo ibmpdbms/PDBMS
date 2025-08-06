@@ -17,6 +17,31 @@
             </small>
         </div>
 
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="age" class="form-label">Age</label>
+                <input class="form-control" id="age" name="age" type="number" min="0" max="100" required>
+                <div id="ageFeedback" class="form-text text-danger"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="patient_contact_number" class="form-label">Patient Contact Number</label>
+                <input class="form-control" id="patient_contact_number" name="patient_contact_number" type="tel" maxlength="10" required>
+                <div id="patientPhoneFeedback" class="form-text text-danger"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="emergency_contact_name" class="form-label">Emergency Contact Name</label>
+                <input class="form-control" name="emergency_contact_name" type="text" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="emergency_contact" class="form-label">Emergency Contact Number</label>
+                <input class="form-control" id="emergency_contact" name="emergency_contact" type="tel" maxlength="10" required>
+                <div id="emergencyPhoneFeedback" class="form-text text-danger"></div>
+            </div>
+        </div>
+
         <div class="mb-3">
             <label for="blood_group" class="form-label">Blood Group</label>
             <select class="form-control" name="blood_group" required>
@@ -73,14 +98,52 @@
             <input class="form-control" name="insurance_company" type="text">
         </div>
         <div class="mb-3">
-    <label class="form-label">Doctor Notes</label>
-    <textarea class="form-control auto-expand" name="doctor_notes" rows="3" style="resize: none;"></textarea>
-    <small class="form-text text-muted">
-        Notes about patient condition, advice, or observations.
-    </small>
-    </div>
-
+            <label class="form-label">Doctor Notes</label>
+            <textarea class="form-control auto-expand" name="doctor_notes" rows="3" style="resize: none;"></textarea>
+            <small class="form-text text-muted">
+                Notes about patient condition, advice, or observations.
+            </small>
+        </div>
 
         <button class="btn btn-primary" type="submit">Save Record</button>
     </form>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const ageField = document.getElementById("age");
+    const ageFeedback = document.getElementById("ageFeedback");
+
+    const patientPhone = document.getElementById("patient_contact_number");
+    const patientPhoneFeedback = document.getElementById("patientPhoneFeedback");
+
+    const emergencyPhone = document.getElementById("emergency_contact");
+    const emergencyPhoneFeedback = document.getElementById("emergencyPhoneFeedback");
+
+    // Age validation
+    ageField.addEventListener("input", () => {
+        if (ageField.value === "") {
+            ageFeedback.textContent = "❌ Age is required.";
+        } else if (ageField.value < 0 || ageField.value > 100) {
+            ageFeedback.textContent = "❌ Age must be between 0 and 100.";
+        } else {
+            ageFeedback.textContent = "";
+        }
+    });
+
+    // Phone number validation (only digits, max 10 digits)
+    function validatePhone(field, feedback) {
+        field.addEventListener("input", () => {
+            field.value = field.value.replace(/[^0-9]/g, ""); // Only digits allowed
+            if (field.value.length !== 10) {
+                feedback.textContent = "❌ Phone number must be 10 digits.";
+            } else {
+                feedback.textContent = "";
+            }
+        });
+    }
+
+    validatePhone(patientPhone, patientPhoneFeedback);
+    validatePhone(emergencyPhone, emergencyPhoneFeedback);
+});
+</script>
 {% endblock %}

@@ -13,6 +13,9 @@
             <p><strong>Patient Code:</strong> <span class="text-danger">{{ patient.patient_code }}</span></p>
             <p><strong>Room:</strong> {{ patient.room_number }}</p>
             <p><strong>Doctor:</strong> {{ patient.doctor_name }}</p>
+            <p><strong>Email:</strong> {{ patient.email or "—" }}</p>
+            <p><strong>Phone Number:</strong> {{ patient.phone_number or "—" }}</p>
+
         </div>
     </div>
 
@@ -20,7 +23,8 @@
         <p>⚠️ This action <strong>cannot be undone</strong>. To confirm, type the patient code below:</p>
         <form action="/delete_patient/{{ patient.patient_code }}" method="post">
             <div class="mb-3">
-                <input type="text" name="confirm_code" class="form-control" placeholder="Enter patient code to confirm" required>
+                <input type="text" name="confirm_code" class="form-control" 
+                       placeholder="Enter patient code to confirm" required>
             </div>
             <button type="submit" class="btn btn-danger">🗑 Permanently Delete Patient</button>
             <a href="/patient_detail/{{ patient.patient_code }}" class="btn btn-secondary">Cancel</a>
