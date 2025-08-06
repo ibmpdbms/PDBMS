@@ -32,17 +32,13 @@
                         {% if patient.patient_code %}
                             {{ patient.patient_code }}
                         {% else %}
-                            <a href="/link_patient/{{ patient.id }}" class="btn btn-sm btn-warning">
-                                Link Patient Code
-                            </a>
+                            <a href="/link_patient/{{ patient.id }}" 
+                               class="btn btn-sm btn-warning">Link Patient Code</a>
                         {% endif %}
                     </td>
                     <td>
-                        {% if patient.patient_code %}
-                            <a href="/confirm_delete/{{ patient.patient_code }}" class="btn btn-danger btn-sm">Delete</a>
-                        {% else %}
-                            <span class="text-muted">No record</span>
-                        {% endif %}
+                        <a href="/confirm_delete_user/{{ patient.uuid }}" 
+                            class="btn btn-danger btn-sm">Delete Account</a>
                     </td>
                 </tr>
                 {% endfor %}

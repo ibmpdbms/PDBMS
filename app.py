@@ -50,38 +50,43 @@ def login():
         flash(msg)
 
     if request.method == "POST":
-        username = request.form.get("username").lower().strip()
+        identifier = request.form.get("identifier")
         password = request.form.get("password")
 
-        # Basic checks
-        if not username:
-            return apology("must provide username", 403)
+        if not identifier:
+            return apology("must provide email or phone number", 403)
         if not password:
             return apology("must provide password", 403)
 
-        rows = db.execute("SELECT * FROM users WHERE username = ?", username)
+        identifier = identifier.strip().lower()
 
-        # Check credentials
+        import re
+        email_regex = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
+        phone_regex = r"^[7-9]\d{9}$"
+        reserved_admin_phone = "5000000005"
+
+        # Determine query based on type
+        if re.match(email_regex, identifier):
+            rows = db.execute("SELECT * FROM users WHERE email = ?", identifier)
+        elif re.match(phone_regex, identifier) or identifier == reserved_admin_phone:
+            rows = db.execute("SELECT * FROM users WHERE phone_number = ?", identifier)
+        else:
+            return apology("Invalid email or mobile number format", 403)
+
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], password):
-            return apology("Invalid username and/or password", 403)
-
-        # Extra protection for admin login
-        if rows[0]["role"] == "admin" and username != "admin":
-            return apology("Unauthorized access attempt", 403)
+            return apology("Invalid credentials", 403)
 
         # Save session
         session["user_id"] = rows[0]["id"]
         session["role"] = rows[0]["role"]
 
-        # If patient, fetch patient_code
         if rows[0]["role"] == "patient":
-            code = db.execute("SELECT patient_code FROM records WHERE patient_name = ?", username)
-            if code:
-                session["patient_code"] = code[0]["patient_code"]
-            else:
-                session["patient_code"] = None
+            code = db.execute(
+                "SELECT patient_code FROM records WHERE LOWER(patient_name) = LOWER(?)", 
+                rows[0]["username"]
+            )
+            session["patient_code"] = code[0]["patient_code"] if code else None
 
-        # Redirect based on role
         if rows[0]["role"] == "admin":
             return redirect("/admin_dashboard")
         elif rows[0]["role"] == "staff":
@@ -90,6 +95,8 @@ def login():
             return redirect("/patient_dashboard")
 
     return render_template("login.html")
+
+
 
 
 
@@ -165,9 +172,22 @@ def delete_patient(patient_code):
         flash("❌ Patient code mismatch. Deletion cancelled.")
         return redirect(f"/confirm_delete/{patient_code}")
 
+    # Find the patient’s username from records
+    patient = db.execute("SELECT patient_name FROM records WHERE patient_code = ?", patient_code)
+    if not patient:
+        return apology("Patient not found", 404)
+
+    patient_name = patient[0]["patient_name"]
+
+    # Delete from records first
     db.execute("DELETE FROM records WHERE patient_code = ?", patient_code)
-    flash("✅ Patient record deleted successfully.")
+
+    # Then delete the corresponding user account
+    db.execute("DELETE FROM users WHERE LOWER(username) = LOWER(?) AND role = 'patient'", patient_name)
+
+    flash("✅ Patient record and account deleted successfully.")
     return redirect("/staff_dashboard")
+
 
 
 @app.route("/staff_dashboard")
@@ -350,6 +370,8 @@ def api_search_patient():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    RESERVED_ADMIN_PHONE = "5000000005"
+
     if request.method == "GET":
         return render_template("register.html")
     else:
@@ -374,6 +396,10 @@ def register():
             return apology("Passwords don't match!")
         if username.lower() in ["admin", "administrator", "root"]:
             return apology("This username is reserved. Please choose another.")
+
+        # Block reserved admin phone number
+        if phone_number == RESERVED_ADMIN_PHONE:
+            return apology("This phone number is reserved and cannot be used.")
 
         # Uniqueness checks
         if db.execute("SELECT id FROM users WHERE email = ?", email):
@@ -478,8 +504,9 @@ def manage_staff():
     if session.get("role") != "admin":
         return apology("Access Denied", 403)
 
-    staff = db.execute("SELECT id, username, role, uuid FROM users WHERE role = 'staff'")
+    staff = db.execute("SELECT username, uuid, role FROM users WHERE role = 'staff'")
     return render_template("manage_staff.html", staff=staff)
+
 
 @app.route("/link_patient/<int:user_id>", methods=["GET", "POST"])
 @login_required
@@ -546,51 +573,36 @@ def link_patient(user_id):
 def customer_support():
     return render_template("customer_support.html")
 
-@app.route("/confirm_delete_user/<int:user_id>")
+@app.route("/confirm_delete_user/<uuid>")
 @login_required
-def confirm_delete_user(user_id):
+def confirm_delete_user(uuid):
     if session.get("role") != "admin":
         return apology("Access Denied", 403)
 
-    # Fetch user
-    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    user = db.execute("SELECT * FROM users WHERE uuid = ?", uuid)
     if not user:
         return apology("User not found", 404)
-    user = user[0]
 
-    # Fetch linked patient (if any)
-    linked_patient = db.execute("""
-        SELECT r.patient_code
-        FROM records r
-        WHERE TRIM(LOWER(r.patient_name)) = TRIM(LOWER(?))
-    """, user["username"])
+    return render_template("confirm_delete_user.html", user=user[0])
 
-    return render_template(
-        "confirm_delete_user.html",
-        user=user,
-        linked_patient=linked_patient[0] if linked_patient else None,
-        referrer=request.referrer or url_for("admin_dashboard")
-    )
 
-@app.route("/delete_user/<int:user_id>", methods=["POST"])
+@app.route("/delete_user/<uuid>", methods=["POST"])
 @login_required
-def delete_user(user_id):
+def delete_user(uuid):
     if session.get("role") != "admin":
         return apology("Access Denied", 403)
 
     confirm_uuid = request.form.get("confirm_uuid")
-    next_url = request.form.get("next")
-    user = db.execute("SELECT * FROM users WHERE id = ?", user_id)
-    if not user:
-        return apology("User not found", 404)
-
-    if confirm_uuid != user[0]["uuid"]:
+    if confirm_uuid != uuid:
         flash("❌ UUID mismatch. Deletion cancelled.")
-        return redirect(f"/confirm_delete_user/{user_id}")
+        return redirect(f"/confirm_delete_user/{uuid}")
 
-    db.execute("DELETE FROM users WHERE id = ?", user_id)
-    flash(f"✅ User account '{user[0]['username']}' deleted successfully.")
-    return redirect(next_url or url_for("admin_dashboard"))
+    db.execute("DELETE FROM users WHERE uuid = ?", uuid)
+    flash("✅ User account deleted successfully.")
+    return redirect("/admin_dashboard")  # generic manage page
+
+
+
 
 
 @app.context_processor

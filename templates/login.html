@@ -8,13 +8,13 @@
 <form action="/login" method="post" class="mx-auto" style="max-width: 400px;">
     <div class="mb-3">
         <input autocomplete="off" autofocus class="form-control" 
-               name="username" placeholder="Username" type="text" required>
+               name="identifier" placeholder="Email or Mobile Number" type="text" required>
     </div>
     <div class="mb-3 input-group">
         <input class="form-control" id="login_password" name="password" placeholder="Password" type="password" required>
         <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('login_password', this)">👁️</button>
     </div>
-    <button class="btn btn-primary w-100" type="submit">Log In</button>
+    <button class="btn btn-primary w-100" type="submit" disabled>Log In</button>
 </form>
 
 <script>
@@ -28,5 +28,43 @@ function togglePassword(fieldId, btn) {
         btn.textContent = "👁️";
     }
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    const identifierInput = document.querySelector("input[name='identifier']");
+    const loginBtn = document.querySelector("button[type='submit']");
+    const helpText = document.createElement("small");
+
+    helpText.style.display = "block";
+    helpText.style.marginTop = "5px";
+    identifierInput.parentNode.appendChild(helpText);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[7-9]\d{9}$/; // Indian phone numbers starting 7–9, exactly 10 digits
+    const reservedAdminPhone = "5000000005";
+
+    identifierInput.addEventListener("input", () => {
+        const value = identifierInput.value.trim();
+
+        if (emailRegex.test(value)) {
+            helpText.textContent = "✅ Valid Email detected.";
+            helpText.style.color = "green";
+            loginBtn.disabled = false;
+        } 
+        else if (phoneRegex.test(value) || value === reservedAdminPhone) {
+            if (value === reservedAdminPhone) {
+                helpText.textContent = "✅ Reserved Admin Number detected.";
+            } else {
+                helpText.textContent = "✅ Valid Indian Mobile Number detected.";
+            }
+            helpText.style.color = "green";
+            loginBtn.disabled = false;
+        } 
+        else {
+            helpText.textContent = "❌ Enter a valid Email or 10-digit Mobile Number (starting with 7–9).";
+            helpText.style.color = "red";
+            loginBtn.disabled = true;
+        }
+    });
+});
 </script>
 {% endblock %}
