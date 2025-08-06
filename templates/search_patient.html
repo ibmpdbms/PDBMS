@@ -1,31 +1,65 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Search Patient
+    Search Patients
 {% endblock %}
 
 {% block main %}
-    <h1 class="mb-4">🔍 Search Patient</h1>
-    
-    <form action="/search_patient" method="get" class="w-75 mx-auto mb-4">
-        <div class="input-group">
-            <input type="text" class="form-control" name="q" placeholder="Enter patient name or room number" required>
-            <button class="btn btn-success" type="submit">Search</button>
-        </div>
-    </form>
+    <h2 class="mb-4">🔍 Search Patients</h2>
 
-    {% if patients %}
-        <div class="list-group w-75 mx-auto">
-            {% for patient in patients %}
-                <div class="list-group-item">
-                    <h5>{{ patient.patient_name }}</h5>
-                    <p><strong>Room:</strong> {{ patient.room_number }}</p>
-                    <p><strong>Doctor:</strong> {{ patient.doctor_name }}</p>
-                        <a href="/patient_detail/{{ patient.patient_code }}" class="btn btn-sm btn-primary">View Full Record</a>
-                </div>
-            {% endfor %}
-        </div>
-    {% elif request.args.get("q") %}
-        <p class="text-muted">No results found.</p>
-    {% endif %}
+    <input type="text" id="searchBox" placeholder="Type to search..." 
+           class="form-control w-50 mb-3 mx-auto">
+
+    <table class="table table-striped table-bordered w-75 mx-auto">
+        <thead class="table-dark">
+            <tr>
+                <th>Patient Name</th>
+                <th>Room Number</th>
+                <th>Patient Code</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="patientsTable">
+            <tr>
+                <td colspan="3" class="text-center">Loading patients...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+    async function fetchPatients(query="") {
+        const res = await fetch(`/api/search_patient?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        let tableBody = document.getElementById("patientsTable");
+        tableBody.innerHTML = "";
+
+        if (data.patients && data.patients.length > 0) {
+            data.patients.forEach(p => {
+                let row = `<tr>
+                    <td>${p.patient_name}</td>
+                    <td>${p.room_number}</td>
+                    <td>${p.patient_code}</td>
+                    <td>
+                        <a href="/patient_detail/${p.patient_code}" 
+                           class="btn btn-info btn-sm">View</a>
+                    </td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        } else {
+            tableBody.innerHTML = `<tr>
+                <td colspan="3" class="text-center">No patients found.</td>
+            </tr>`;
+        }
+    }
+
+    // initial load
+    fetchPatients();
+
+    // live search
+    document.getElementById("searchBox").addEventListener("keyup", e => {
+        fetchPatients(e.target.value);
+    });
+    </script>
 {% endblock %}

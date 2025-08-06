@@ -14,6 +14,7 @@
                     <th>ID</th>
                     <th>Username</th>
                     <th>UUID</th>
+                    <th>Patient Code</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -23,6 +24,15 @@
                     <td>{{ patient.id }}</td>
                     <td>{{ patient.username }}</td>
                     <td>{{ patient.uuid or "—" }}</td>
+                    <td>
+                        {% if patient.patient_code %}
+                            {{ patient.patient_code }}
+                        {% else %}
+                            <a href="/link_patient/{{ patient.id }}" class="btn btn-sm btn-warning">
+                                Link Patient Code
+                            </a>
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="/confirm_delete_user/{{ patient.id }}" class="btn btn-danger btn-sm">Delete</a>
                     </td>

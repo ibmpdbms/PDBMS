@@ -1,11 +1,23 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Apology
+    Error {{ code }}
 {% endblock %}
 
 {% block main %}
-    <!-- https://memegen.link/ -->
-    <!-- https://knowyourmeme.com/memes/grumpy-cat -->
-    <img alt="{{ top }}" class="border img-fluid" src="https://api.memegen.link/images/custom/{{ top | urlencode }}/{{ bottom | urlencode }}.jpg?background=https://i.imgur.com/CsCgN7Ll.png&width=400" title="{{ top }}">
+    <h1 class="mb-4 text-danger">⚠️ Error {{ code }}</h1>
+
+    <div class="card w-75 mx-auto shadow-sm border-danger">
+        <div class="card-body text-center fs-4">
+            <h5 class="card-title text-danger fs-4">Something went wrong</h5>
+            <p class="card-text">{{ message }}</p>
+        </div>
+    </div>
+
+    <div class="alert alert-warning w-75 mx-auto mt-4 text-center fs-4">
+        <p>🚑 Please check your input and try again.</p>
+        <a href="{{ request.referrer or url_for('index') }}" class="btn btn-secondary">
+            ⬅ Back
+        </a>
+    </div>
 {% endblock %}

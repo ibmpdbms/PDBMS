@@ -1,28 +1,29 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    ⚠️ Confirm User Account Deletion
+    Confirm User Account Deletion
 {% endblock %}
 
 {% block main %}
-    <h2>⚠️ Confirm User Account Deletion</h2>
+    <h1 class="mb-4 text-danger">⚠️ Confirm User Account Deletion</h1>
 
-    <p>
-        <strong>{{ user.username.upper() }}</strong><br>
-        Role: {{ user.role.upper() }}<br>
-        <strong>UUID:</strong> {{ user.uuid }}
-    </p>
-
-    <div class="alert alert-danger">
-        ⚠️ This action cannot be undone. To confirm, type the UUID 
-        <strong>{{ user.uuid }}</strong> below:
+    <div class="card w-75 mx-auto shadow-sm border-danger">
+        <div class="card-body text-start">
+            <h5 class="card-title text-danger">{{ user.username.upper() }}</h5>
+            <p><strong>Role:</strong> {{ user.role.upper() }}</p>
+            <p><strong>UUID:</strong> <span class="text-danger">{{ user.uuid }}</span></p>
+        </div>
     </div>
 
-    <form action="/delete_user/{{ user.id }}" method="post">
-        <label for="confirm_uuid">Enter UUID to confirm</label>
-        <input type="text" name="confirm_uuid" id="confirm_uuid" required class="form-control mb-3">
-        
-        <button type="submit" class="btn btn-danger">Delete</button>
-        <a href="{{ request.referrer }}" class="btn btn-secondary">Cancel</a>
-    </form>
+    <div class="alert alert-warning w-75 mx-auto mt-4">
+        <p>⚠️ This action <strong>cannot be undone</strong>. To confirm, type the UUID below:</p>
+        <form action="/delete_user/{{ user.id }}" method="post">
+            <div class="mb-3">
+                <input type="text" name="confirm_uuid" class="form-control" 
+                       placeholder="Enter UUID to confirm" required>
+            </div>
+            <button type="submit" class="btn btn-danger">🗑 Permanently Delete User</button>
+            <a href="{{ request.referrer }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
 {% endblock %}

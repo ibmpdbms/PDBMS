@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Link Patient Code{% endblock %}
+
+{% block main %}
+<h2>🔗 Link Patient Record for {{ user.username }}</h2>
+
+{% if unlinked %}
+<form method="post">
+    <div class="mb-3">
+        <label for="patient_code">Select Patient Record:</label>
+        <select class="form-control" id="patient_code" name="patient_code" required>
+            {% for record in unlinked %}
+                <option value="{{ record.patient_code }}">
+                    {{ record.patient_code }} — {{ record.patient_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Link</button>
+</form>
+{% else %}
+<div class="alert alert-info">No unlinked patient records available.</div>
+{% endif %}
+{% endblock %}
